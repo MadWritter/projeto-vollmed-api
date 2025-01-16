@@ -1,8 +1,19 @@
 package com.vollmed.api.controller;
 
+import com.vollmed.api.model.dto.DadosCadastroMedico;
+import com.vollmed.api.model.dto.DadosMedicoCadastrado;
 import com.vollmed.api.model.service.MedicoService;
+
+import jakarta.validation.Valid;
+
+import java.net.URI;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Controller para as requisições dos recursos dos médicos
@@ -18,5 +29,15 @@ public class MedicoController {
 
     public MedicoController(MedicoService medicoService) {
         this.medicoService = medicoService;
+    }
+
+    @PostMapping
+    public ResponseEntity<DadosMedicoCadastrado> cadastrarMedico(
+        @RequestBody @Valid DadosCadastroMedico dadosDeCadastro, UriComponentsBuilder uriBuilder) {
+
+        DadosMedicoCadastrado dadosMedicoCadastrado = medicoService.cadastrarMedico(dadosDeCadastro);
+        URI uri = uriBuilder.path("/{id}").buildAndExpand(dadosMedicoCadastrado.id()).toUri();
+
+        return ResponseEntity.created(uri).body(dadosMedicoCadastrado);
     }
 }

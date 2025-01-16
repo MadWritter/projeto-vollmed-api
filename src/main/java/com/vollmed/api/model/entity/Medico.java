@@ -1,5 +1,6 @@
 package com.vollmed.api.model.entity;
 
+import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.repository.MedicoRepository;
 
 import jakarta.persistence.Column;
@@ -29,17 +30,23 @@ public class Medico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false, length = 100)
     private String nome;
+
     @Column(nullable = false, length = 100, unique = true)
     private String email;
+
     @Column(nullable = false, length = 11, unique = true)
     private String telefone;
+
     @Column(nullable = false, length = 6, unique = true)
     private String crm;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Especialidade especialidade;
+
     @Embedded
     private Endereco endereco;
 
@@ -59,6 +66,10 @@ public class Medico {
         setCrm(crm);
         setEspecialidade(especialidade);
         setEndereco(endereco);
+    }
+
+    public Medico(DadosCadastroMedico dados) {
+        this(dados.nome(), dados.email(), dados.telefone(), dados.crm(), dados.especialidade(), dados.endereco());
     }
 
 	public void setNome(String nome) {
@@ -96,6 +107,7 @@ public class Medico {
 		  this.endereco = endereco;
 		}
 	}
+
 
 
 }
