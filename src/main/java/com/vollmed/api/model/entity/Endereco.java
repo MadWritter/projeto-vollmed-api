@@ -1,5 +1,7 @@
 package com.vollmed.api.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -49,11 +51,13 @@ public class Endereco {
     @NotNull(message = "Deve informar uma das unidades federativas em sigla, ex(SP, RJ...)")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 2)
+    @JsonProperty("UF")
     private UF uf;
 
     @NotBlank(message = "Deve informar o cep")
     @Pattern(regexp = "^[0-9]{8}", message = "Deve conter apenas os 8 dígitos do cep")
     @Column(nullable = false, length = 8)
+    @JsonProperty("CEP")
     private String cep;
 
     /**

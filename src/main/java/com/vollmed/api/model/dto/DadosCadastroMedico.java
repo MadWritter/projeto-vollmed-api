@@ -1,5 +1,6 @@
 package com.vollmed.api.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vollmed.api.controller.MedicoController;
 import com.vollmed.api.model.entity.Endereco;
 import com.vollmed.api.model.entity.Especialidade;
@@ -34,6 +35,7 @@ public record DadosCadastroMedico(
 
     @NotBlank(message = "O crm não pode ser vazio")
     @Pattern(regexp = "^[0-9]{6}", message = "O crm deve conter apenas os 6 dígitos obrigatórios")
+    @JsonProperty("CRM")
     String crm,
 
     @NotNull(message = "A especialidade deve ser informada")

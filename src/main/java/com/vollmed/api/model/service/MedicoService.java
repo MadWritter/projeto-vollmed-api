@@ -39,15 +39,15 @@ public class MedicoService {
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao cadastrar o médico, o banco está inoperante");
         } catch (DataIntegrityViolationException e) {
-            if(e.getMessage().contains("email")) {
+            if(e.getMessage().toLowerCase().contains("email nulls first")) {
                 throw new IllegalArgumentException("Email já cadastrado");
             }
 
-            if(e.getMessage().contains("telefone")) {
+            if(e.getMessage().toLowerCase().contains("telefone nulls first")) {
                 throw new IllegalArgumentException("Telefone já cadastrado");
             }
 
-            if(e.getMessage().contains("crm")) {
+            if(e.getMessage().toLowerCase().contains("crm nulls first")) {
                 throw new IllegalArgumentException("CRM já cadastrado");
             }
             throw e;
