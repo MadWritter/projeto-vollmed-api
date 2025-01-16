@@ -48,5 +48,6 @@ CREATE TABLE IF NOT EXISTS medico (
             'TO'
         )
     ),
+    cep VARCHAR(8) NOT NULL,
     PRIMARY KEY (id)
 );
