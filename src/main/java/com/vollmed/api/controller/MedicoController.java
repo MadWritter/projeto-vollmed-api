@@ -31,6 +31,12 @@ public class MedicoController {
         this.medicoService = medicoService;
     }
 
+    /**
+    * Solicita o cadastro de um médico
+    * @param dadosDeCadastro que vem no corpo da requisição
+    * @param uriBuilder para construir a URI do recurso criado
+    * @return um DTO com os dados do médico cadastrado
+    */
     @PostMapping
     public ResponseEntity<DadosMedicoCadastrado> cadastrarMedico(
         @RequestBody @Valid DadosCadastroMedico dadosDeCadastro, UriComponentsBuilder uriBuilder) {
