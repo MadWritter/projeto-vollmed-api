@@ -1,5 +1,9 @@
 package com.vollmed.api.model.service;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.vollmed.api.controller.MedicoController;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
@@ -7,9 +11,6 @@ import com.vollmed.api.model.entity.Medico;
 import com.vollmed.api.model.repository.MedicoRepository;
 
 import jakarta.persistence.PersistenceException;
-
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
 
 /**
  * Serviço para as os recursos dos médicos
@@ -51,6 +52,20 @@ public class MedicoService {
                 throw new IllegalArgumentException("CRM já cadastrado");
             }
             throw e;
+        }
+    }
+
+    /**
+    * Busca pelos dados de um médico cadastrado
+    * @param id que vem na requisição
+    * @return um DTO com os dados do médico cadastrado
+    */
+    @Transactional(readOnly = true)
+    public DadosMedicoCadastrado findById(Long id) {
+        try {
+            return medicoRepository.findById(id).map(DadosMedicoCadastrado::new).orElse(null);
+        } catch(PersistenceException e) {
+            throw new PersistenceException("Erro ao consultar um médico cadastrado, o banco está inoperante");
         }
     }
 }

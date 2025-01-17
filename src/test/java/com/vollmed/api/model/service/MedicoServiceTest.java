@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,9 +59,26 @@ public class MedicoServiceTest {
 
     @Test
     public void deveLancarUmaExcecao_casoAlgumDadoUniqueSejaEncontrado() {
-        when(medicoRepository.save(any(Medico.class))).thenThrow(new DataIntegrityViolationException("Simulando email já cadastrado"));
+        when(medicoRepository.save(any(Medico.class))).thenThrow(new DataIntegrityViolationException("email nulls first"));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> medicoService.cadastrarMedico(dadosCadastroMedico));
         assertTrue(ex.getMessage().contains("Email já cadastrado"));
+    }
+
+    @Test
+    public void deveRetornarUmMedicoCadastrado() {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        when(medicoRepository.findById(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+
+        DadosMedicoCadastrado dadosMedicoCadastrado = medicoService.findById(1L);
+        assertNotNull(dadosMedicoCadastrado);
+    }
+
+    @Test
+    public void deveLancarUmaExcecaoAoConsultar_casoBancoFora() {
+        when(medicoRepository.findById(anyLong())).thenThrow(PersistenceException.class);
+
+        PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findById(1L));
+        assertEquals("Erro ao consultar um médico cadastrado, o banco está inoperante", ex.getMessage());
     }
 }

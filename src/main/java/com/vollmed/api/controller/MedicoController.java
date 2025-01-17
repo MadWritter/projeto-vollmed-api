@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,5 +47,21 @@ public class MedicoController {
         URI uri = uriBuilder.path("/{id}").buildAndExpand(dadosMedicoCadastrado.id()).toUri();
 
         return ResponseEntity.created(uri).body(dadosMedicoCadastrado);
+    }
+
+    /**
+    * Busca os dados de um médico cadastrado
+    * @param id que vem na URL
+    * @return um DTO com os dados do médico cadastrado
+    */
+    @GetMapping("/{id}")
+    public ResponseEntity<DadosMedicoCadastrado> findById(@PathVariable Long id) {
+        DadosMedicoCadastrado dadosMedicoCadastrado = medicoService.findById(id);
+
+        if(dadosMedicoCadastrado == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(dadosMedicoCadastrado);
     }
 }
