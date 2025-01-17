@@ -1,6 +1,11 @@
 package com.vollmed.api.model.service;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +71,21 @@ public class MedicoService {
             return medicoRepository.findById(id).map(DadosMedicoCadastrado::new).orElse(null);
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar um médico cadastrado, o banco está inoperante");
+        }
+    }
+
+    /**
+    * Busca pela lista de médicos cadastrados
+    * @param sort atributo de ordenação da consulta
+    * @param page a página a ser consultada
+    * @return uma página com os médicos encontrados conforme a ordenação
+    */
+    public Page<DadosMedicoCadastrado> findAll(String sort, int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(Direction.ASC,sort));
+        try {
+            return medicoRepository.findAll(pageable).map(DadosMedicoCadastrado::new);
+        } catch(PersistenceException e) {
+            throw new PersistenceException("Erro ao consultar a lista de médicos, o banco está inoperante");
         }
     }
 }

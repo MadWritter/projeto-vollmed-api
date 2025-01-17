@@ -1,18 +1,24 @@
 package com.vollmed.api.controller;
 
 import static builder.DadosCadastroMedicoBuilder.dadosDeCadastro;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +49,8 @@ public class MedicoControllerTest {
     @Test
     public void deveCadastrarUmMedico() throws Exception {
         var medicoCadastrado = new Medico(dadosCadastroMedico);
-        when(medicoService.cadastrarMedico(any(DadosCadastroMedico.class))).thenReturn(new DadosMedicoCadastrado(medicoCadastrado));
+        when(medicoService.cadastrarMedico(any(DadosCadastroMedico.class)))
+            .thenReturn(new DadosMedicoCadastrado(medicoCadastrado));
 
         mockMvc.perform(post("/medico")
             .contentType(MediaType.APPLICATION_JSON)
@@ -70,5 +77,23 @@ public class MedicoControllerTest {
 
         mockMvc.perform(get("/medico/2"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deveRetornarUmaPaginaComOsMedicosCadastrados() throws Exception {
+        var medico1 = new Medico(dadosCadastroMedico);
+        var medico2 = new Medico(dadosCadastroMedico);
+        var medico3 = new Medico(dadosCadastroMedico);
+        var medico4 = new Medico(dadosCadastroMedico);
+        var listMedicos = List.of(medico1, medico2, medico3, medico4);
+
+        when(medicoService.findAll(anyString(), anyInt()))
+            .thenReturn(new PageImpl<>(listMedicos.stream().map(DadosMedicoCadastrado::new).toList()));
+
+        mockMvc.perform(get("/medico")
+            .param("sort", "nome")
+            .param("page", "0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content", hasSize(4)));
     }
 }

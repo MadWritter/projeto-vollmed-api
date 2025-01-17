@@ -2,6 +2,7 @@ package com.vollmed.api.model.service;
 
 import static builder.DadosCadastroMedicoBuilder.dadosDeCadastro;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -18,6 +20,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
@@ -80,5 +85,28 @@ public class MedicoServiceTest {
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findById(1L));
         assertEquals("Erro ao consultar um médico cadastrado, o banco está inoperante", ex.getMessage());
+    }
+
+    @Test
+    public void deveRetornarUmaPaginaComOsDadosMedicosCadastrados() {
+        var medico1 = new Medico(dadosCadastroMedico);
+        var medico2 = new Medico(dadosCadastroMedico);
+        var medico3 = new Medico(dadosCadastroMedico);
+
+        var pageImpl = new PageImpl<>(List.of(medico1, medico2, medico3));
+
+        when(medicoRepository.findAll(any(Pageable.class))).thenReturn(pageImpl);
+
+        Page<DadosMedicoCadastrado> page = medicoService.findAll("nome", 1);
+        assertNotNull(page);
+        assertFalse(page.isEmpty());
+    }
+
+    @Test
+    public void deveLancarUmaExcecaoAoConsultarALista_casoBancoFora() {
+        when(medicoRepository.findAll(any(Pageable.class))).thenThrow(PersistenceException.class);
+
+        PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findAll("nome", 1));
+        assertEquals("Erro ao consultar a lista de médicos, o banco está inoperante", ex.getMessage());
     }
 }
