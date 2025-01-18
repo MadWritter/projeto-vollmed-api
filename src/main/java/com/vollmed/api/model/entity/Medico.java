@@ -111,6 +111,6 @@ public class Medico {
 	}
 
 	public void atualizarEndereco(DadosAtualizacaoEndereco enderecoAtualizado) {
-	    this.endereco.atualizarEndereco(enderecoAtualizado);
+	    this.endereco = new Endereco(enderecoAtualizado);
 	}
 }

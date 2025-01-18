@@ -65,6 +65,10 @@ public class Endereco {
         this(dados.logradouro(), dados.numero(), dados.complemento(), dados.bairro(), dados.cidade(), dados.uf(), dados.cep());
     }
 
+    public Endereco(DadosAtualizacaoEndereco dados) {
+        this(dados.logradouro(), dados.numero(), dados.complemento(), dados.bairro(), dados.cidade(), dados.uf(), dados.cep());
+    }
+
 	public void setLogradouro(String logradouro) {
 	   if(logradouro != null && !logradouro.isBlank()) {
 	     this.logradouro = logradouro;
@@ -72,11 +76,15 @@ public class Endereco {
 	}
 
 	public void setNumero(Integer numero) {
-	   this.numero = numero;
+	   if(numero != null && numero > 0) {
+	     this.numero = numero;
+	   }
 	}
 
 	public void setComplemento(String complemento) {
-	   this.complemento = complemento;
+	   if(complemento != null && !complemento.isBlank()) {
+	     this.complemento = complemento;
+	   }
 	}
 
 	public void setBairro(String bairro) {
@@ -102,9 +110,4 @@ public class Endereco {
 		  this.cep = cep;
 		}
 	}
-
-
-    public void atualizarEndereco(DadosAtualizacaoEndereco enderecoAtualizado) {
-        //TODO fazer as regras de atualização de endereço
-    }
 }
