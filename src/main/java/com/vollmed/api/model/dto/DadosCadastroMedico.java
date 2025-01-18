@@ -2,7 +2,6 @@ package com.vollmed.api.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vollmed.api.controller.MedicoController;
-import com.vollmed.api.model.entity.Endereco;
 import com.vollmed.api.model.entity.Especialidade;
 
 import jakarta.validation.Valid;
@@ -43,7 +42,7 @@ public record DadosCadastroMedico(
 
     @NotNull(message = "Deve conter os dados de endereço")
     @Valid
-    Endereco endereco
+    DadosCadastroEndereco endereco
 
 ) {
 

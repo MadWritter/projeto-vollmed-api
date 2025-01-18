@@ -1,7 +1,7 @@
 package builder;
 
+import com.vollmed.api.model.dto.DadosCadastroEndereco;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
-import com.vollmed.api.model.entity.Endereco;
 import com.vollmed.api.model.entity.Especialidade;
 import com.vollmed.api.model.entity.UF;
 
@@ -15,7 +15,7 @@ public class DadosCadastroMedicoBuilder {
     }
 
     public DadosCadastroMedicoBuilder validos() {
-        var endereco = new Endereco("teste", null, null, "teste_bairro", "teste_cidade", UF.SP, "66789000");
+        var endereco = new DadosCadastroEndereco("teste", null, null, "teste_bairro", "teste_cidade", UF.SP, "66789000");
         this.dados = new DadosCadastroMedico("Teste", "teste@gmail.com", "88999990000", "777888", Especialidade.CARDIOLOGIA, endereco);
         return this;
     }

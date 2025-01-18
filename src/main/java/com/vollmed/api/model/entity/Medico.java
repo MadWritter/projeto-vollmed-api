@@ -1,5 +1,7 @@
 package com.vollmed.api.model.entity;
 
+import com.vollmed.api.model.dto.DadosAtualizacaoEndereco;
+import com.vollmed.api.model.dto.DadosCadastroEndereco;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.repository.MedicoRepository;
 
@@ -59,7 +61,7 @@ public class Medico {
     * @param especialidade uma das especialidades médicas
     * @param endereco os dados de endereço
     */
-    public Medico(String nome, String email, String telefone, String crm, Especialidade especialidade, Endereco endereco) {
+    public Medico(String nome, String email, String telefone, String crm, Especialidade especialidade, DadosCadastroEndereco endereco) {
         setNome(nome);
         setEmail(email);
         setTelefone(telefone);
@@ -102,10 +104,13 @@ public class Medico {
 		}
 	}
 
-	public void setEndereco(Endereco endereco) {
+	public void setEndereco(DadosCadastroEndereco endereco) {
 		if(endereco != null) {
-		  this.endereco = endereco;
+		  this.endereco = new Endereco(endereco);
 		}
 	}
 
+	public void atualizarEndereco(DadosAtualizacaoEndereco enderecoAtualizado) {
+	    this.endereco.atualizarEndereco(enderecoAtualizado);
+	}
 }
