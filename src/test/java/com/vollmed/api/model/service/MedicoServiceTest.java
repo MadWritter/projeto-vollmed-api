@@ -1,5 +1,6 @@
 package com.vollmed.api.model.service;
 
+import static builder.DadosAtualizacaoMedicoBuilder.dadosDeAtualizacao;
 import static builder.DadosCadastroMedicoBuilder.dadosDeCadastro;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,11 +25,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.vollmed.api.model.dto.DadosAtualizacaoMedico;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
 import com.vollmed.api.model.entity.Medico;
 import com.vollmed.api.model.repository.MedicoRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,10 +42,12 @@ public class MedicoServiceTest {
     @Mock
     private MedicoRepository medicoRepository;
     private static DadosCadastroMedico dadosCadastroMedico;
+    private static DadosAtualizacaoMedico dadosDeAtualizacao;
 
     @BeforeAll
     public static void setup() {
         dadosCadastroMedico = dadosDeCadastro().validos().agora();
+        dadosDeAtualizacao = dadosDeAtualizacao().validos().agora();
     }
 
     @Test
@@ -108,5 +113,22 @@ public class MedicoServiceTest {
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findAll("nome", 1));
         assertEquals("Erro ao consultar a lista de médicos, o banco está inoperante", ex.getMessage());
+    }
+
+    @Test
+    public void deveAtualizarDadosMedicoCadastrado() {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        when(medicoRepository.findById(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+
+        DadosMedicoCadastrado dadosAtualizados = medicoService.atualizarDados(1L, dadosDeAtualizacao);
+        assertNotNull(dadosAtualizados);
+    }
+
+    @Test
+    public void deveLancarExcecao_casoIdNaoTenhaCorrespondente() {
+        when(medicoRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> medicoService.atualizarDados(1L, dadosDeAtualizacao));
+        assertEquals("O ID informado não tem um correspondente", ex.getMessage());
     }
 }

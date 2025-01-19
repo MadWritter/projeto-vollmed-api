@@ -1,6 +1,6 @@
 package com.vollmed.api.model.entity;
 
-import com.vollmed.api.model.dto.DadosAtualizacaoEndereco;
+import com.vollmed.api.model.dto.DadosAtualizacaoMedico;
 import com.vollmed.api.model.dto.DadosCadastroEndereco;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.repository.MedicoRepository;
@@ -110,7 +110,15 @@ public class Medico {
 		}
 	}
 
-	public void atualizarEndereco(DadosAtualizacaoEndereco enderecoAtualizado) {
-	    this.endereco = new Endereco(enderecoAtualizado);
+	public void atualizarDados(DadosAtualizacaoMedico dados) {
+	    setNome(dados.nome());
+		setTelefone(dados.telefone());
+		this.endereco.setLogradouro(dados.endereco().logradouro());
+		this.endereco.setNumero(dados.endereco().numero());
+		this.endereco.setComplemento(dados.endereco().complemento());
+		this.endereco.setBairro(dados.endereco().bairro());
+		this.endereco.setCidade(dados.endereco().cidade());
+		this.endereco.setUf(dados.endereco().uf());
+		this.endereco.setCep(dados.endereco().cep());
 	}
 }

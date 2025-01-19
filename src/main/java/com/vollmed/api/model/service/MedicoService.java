@@ -1,5 +1,7 @@
 package com.vollmed.api.model.service;
 
+import java.util.Optional;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,11 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.vollmed.api.controller.MedicoController;
+import com.vollmed.api.model.dto.DadosAtualizacaoMedico;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
 import com.vollmed.api.model.entity.Medico;
 import com.vollmed.api.model.repository.MedicoRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 
 /**
@@ -80,6 +84,7 @@ public class MedicoService {
     * @param page a página a ser consultada
     * @return uma página com os médicos encontrados conforme a ordenação
     */
+    @Transactional(readOnly = true)
     public Page<DadosMedicoCadastrado> findAll(String sort, int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by(Direction.ASC,sort));
         try {
@@ -87,5 +92,23 @@ public class MedicoService {
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar a lista de médicos, o banco está inoperante");
         }
+    }
+
+    /**
+    * Atualiza os dados de um médico cadastrado
+    * @param id que vem na URI
+    * @param dadosDeAtualizacao que vieram no corpo da requisição
+    * @return um DTO com os dados atualizados
+    * @throws EntityNotFoundException caso não tenha uma entidade cadastrada
+    * com o id informado
+    */
+    public DadosMedicoCadastrado atualizarDados(Long id, DadosAtualizacaoMedico dadosDeAtualizacao) {
+        Optional<Medico> medicoCadastrado = medicoRepository.findById(id);
+        if(!medicoCadastrado.isPresent()) {
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
+        }
+        medicoCadastrado.get().atualizarDados(dadosDeAtualizacao);
+        medicoRepository.flush();
+        return new DadosMedicoCadastrado(medicoCadastrado.get());
     }
 }

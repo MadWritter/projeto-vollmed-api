@@ -1,5 +1,6 @@
 package com.vollmed.api.controller;
 
+import static builder.DadosAtualizacaoMedicoBuilder.dadosDeAtualizacao;
 import static builder.DadosCadastroMedicoBuilder.dadosDeCadastro;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,6 +10,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -24,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vollmed.api.model.dto.DadosAtualizacaoMedico;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
 import com.vollmed.api.model.entity.Medico;
@@ -40,10 +43,12 @@ public class MedicoControllerTest {
     private ObjectMapper objectMapper;
 
     private static DadosCadastroMedico dadosCadastroMedico;
+    private static DadosAtualizacaoMedico dadosAtualizacaoMedico;
 
     @BeforeAll
     public static void setup() {
         dadosCadastroMedico = dadosDeCadastro().validos().agora();
+        dadosAtualizacaoMedico = dadosDeAtualizacao().validos().agora();
     }
 
     @Test
@@ -95,5 +100,20 @@ public class MedicoControllerTest {
             .param("page", "0"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content", hasSize(4)));
+    }
+
+    @Test
+    public void deveRetornarUmDTOAtualizado() throws Exception {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        medicoCadastrado.atualizarDados(dadosAtualizacaoMedico);
+        var dadosMedicoAtualizado = new DadosMedicoCadastrado(medicoCadastrado);
+
+        when(medicoService.atualizarDados(anyLong(), any(DadosAtualizacaoMedico.class))).thenReturn(dadosMedicoAtualizado);
+
+        mockMvc.perform(put("/medico/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(dadosAtualizacaoMedico)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nome").value(dadosAtualizacaoMedico.nome()));
     }
 }

@@ -1,6 +1,5 @@
 package com.vollmed.api.model.entity;
 
-import com.vollmed.api.model.dto.DadosAtualizacaoEndereco;
 import com.vollmed.api.model.dto.DadosCadastroEndereco;
 
 import jakarta.persistence.Column;
@@ -62,10 +61,6 @@ public class Endereco {
     }
 
     public Endereco(DadosCadastroEndereco dados) {
-        this(dados.logradouro(), dados.numero(), dados.complemento(), dados.bairro(), dados.cidade(), dados.uf(), dados.cep());
-    }
-
-    public Endereco(DadosAtualizacaoEndereco dados) {
         this(dados.logradouro(), dados.numero(), dados.complemento(), dados.bairro(), dados.cidade(), dados.uf(), dados.cep());
     }
 
