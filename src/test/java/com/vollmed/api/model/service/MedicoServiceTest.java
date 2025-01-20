@@ -78,7 +78,7 @@ public class MedicoServiceTest {
     @Test
     public void deveRetornarUmMedicoCadastrado() {
         var medicoCadastrado = new Medico(dadosCadastroMedico);
-        when(medicoRepository.findById(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(medicoCadastrado));
 
         DadosMedicoCadastrado dadosMedicoCadastrado = medicoService.findById(1L);
         assertNotNull(dadosMedicoCadastrado);
@@ -86,7 +86,7 @@ public class MedicoServiceTest {
 
     @Test
     public void deveLancarUmaExcecaoAoConsultar_casoBancoFora() {
-        when(medicoRepository.findById(anyLong())).thenThrow(PersistenceException.class);
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenThrow(PersistenceException.class);
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findById(1L));
         assertEquals("Erro ao consultar um médico cadastrado, o banco está inoperante", ex.getMessage());
@@ -100,7 +100,7 @@ public class MedicoServiceTest {
 
         var pageImpl = new PageImpl<>(List.of(medico1, medico2, medico3));
 
-        when(medicoRepository.findAll(any(Pageable.class))).thenReturn(pageImpl);
+        when(medicoRepository.findAllByAtivoTrue(any(Pageable.class))).thenReturn(pageImpl);
 
         Page<DadosMedicoCadastrado> page = medicoService.findAll("nome", 1);
         assertNotNull(page);
@@ -109,7 +109,7 @@ public class MedicoServiceTest {
 
     @Test
     public void deveLancarUmaExcecaoAoConsultarALista_casoBancoFora() {
-        when(medicoRepository.findAll(any(Pageable.class))).thenThrow(PersistenceException.class);
+        when(medicoRepository.findAllByAtivoTrue(any(Pageable.class))).thenThrow(PersistenceException.class);
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.findAll("nome", 1));
         assertEquals("Erro ao consultar a lista de médicos, o banco está inoperante", ex.getMessage());
@@ -118,7 +118,7 @@ public class MedicoServiceTest {
     @Test
     public void deveAtualizarDadosMedicoCadastrado() {
         var medicoCadastrado = new Medico(dadosCadastroMedico);
-        when(medicoRepository.findById(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(medicoCadastrado));
 
         DadosMedicoCadastrado dadosAtualizados = medicoService.atualizarDados(1L, dadosDeAtualizacao);
         assertNotNull(dadosAtualizados);
@@ -126,7 +126,7 @@ public class MedicoServiceTest {
 
     @Test
     public void deveLancarExcecao_casoIdNaoTenhaCorrespondente() {
-        when(medicoRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> medicoService.atualizarDados(1L, dadosDeAtualizacao));
         assertEquals("O ID informado não tem um correspondente", ex.getMessage());

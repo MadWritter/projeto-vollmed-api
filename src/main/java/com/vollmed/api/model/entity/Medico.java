@@ -49,6 +49,9 @@ public class Medico {
     @Column(nullable = false, length = 20)
     private Especialidade especialidade;
 
+    @Column(nullable = false)
+    private Boolean ativo;
+
     @Embedded
     private Endereco endereco;
 
@@ -67,6 +70,7 @@ public class Medico {
         setTelefone(telefone);
         setCrm(crm);
         setEspecialidade(especialidade);
+        setAtivo(true);
         setEndereco(endereco);
     }
 
@@ -102,6 +106,12 @@ public class Medico {
 		if(especialidade != null) {
 		  this.especialidade = especialidade;
 		}
+	}
+
+	public void setAtivo(Boolean status) {
+	   if(status != null) {
+		 this.ativo = status;
+	   }
 	}
 
 	public void setEndereco(DadosCadastroEndereco endereco) {

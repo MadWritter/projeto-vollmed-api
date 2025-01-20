@@ -72,7 +72,7 @@ public class MedicoService {
     @Transactional(readOnly = true)
     public DadosMedicoCadastrado findById(Long id) {
         try {
-            return medicoRepository.findById(id).map(DadosMedicoCadastrado::new).orElse(null);
+            return medicoRepository.findByIdAndAtivoTrue(id).map(DadosMedicoCadastrado::new).orElse(null);
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar um médico cadastrado, o banco está inoperante");
         }
@@ -88,7 +88,7 @@ public class MedicoService {
     public Page<DadosMedicoCadastrado> findAll(String sort, int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by(Direction.ASC,sort));
         try {
-            return medicoRepository.findAll(pageable).map(DadosMedicoCadastrado::new);
+            return medicoRepository.findAllByAtivoTrue(pageable).map(DadosMedicoCadastrado::new);
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar a lista de médicos, o banco está inoperante");
         }
@@ -103,12 +103,19 @@ public class MedicoService {
     * com o id informado
     */
     public DadosMedicoCadastrado atualizarDados(Long id, DadosAtualizacaoMedico dadosDeAtualizacao) {
-        Optional<Medico> medicoCadastrado = medicoRepository.findById(id);
+        Optional<Medico> medicoCadastrado = medicoRepository.findByIdAndAtivoTrue(id);
         if(!medicoCadastrado.isPresent()) {
             throw new EntityNotFoundException("O ID informado não tem um correspondente");
         }
-        medicoCadastrado.get().atualizarDados(dadosDeAtualizacao);
-        medicoRepository.flush();
+        try {
+            medicoCadastrado.get().atualizarDados(dadosDeAtualizacao);
+            medicoRepository.flush();
+        } catch(DataIntegrityViolationException e) {
+            if(e.getMessage().toLowerCase().contains("telefone nulls first")) {
+                throw new IllegalArgumentException("Telefone já cadastrado");
+            }
+            throw e;
+        }
         return new DadosMedicoCadastrado(medicoCadastrado.get());
     }
 }
