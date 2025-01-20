@@ -5,12 +5,15 @@ import com.vollmed.api.model.dto.DadosCadastroMedico;
 import com.vollmed.api.model.dto.DadosMedicoCadastrado;
 import com.vollmed.api.model.service.MedicoService;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
 import jakarta.validation.Valid;
 
 import java.net.URI;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,7 +66,7 @@ public class MedicoController {
         DadosMedicoCadastrado dadosMedicoCadastrado = medicoService.findById(id);
 
         if(dadosMedicoCadastrado == null) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
         }
 
         return ResponseEntity.ok(dadosMedicoCadastrado);
@@ -93,5 +96,23 @@ public class MedicoController {
         @PathVariable Long id, @RequestBody @Valid DadosAtualizacaoMedico dadosDeAtualizacao) {
             DadosMedicoCadastrado dadosAtualizados = medicoService.atualizarDados(id, dadosDeAtualizacao);
             return ResponseEntity.ok(dadosAtualizados);
+    }
+
+    /**
+    * Exclui um médico do sistema
+    * @param id que vem na URI
+    * @return um 204 NO CONTENT caso consiga excluir
+    * @throws PersistenceException caso haja problema na sincronização
+    * com o banco ao excluir
+    */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> excluirMedico(@PathVariable Long id) {
+        Boolean excluiu = medicoService.excluirMedico(id);
+
+        if(!excluiu) {
+            throw new PersistenceException("Erro ao processar a exclusão do médico");
+        }
+
+        return ResponseEntity.noContent().build();
     }
 }

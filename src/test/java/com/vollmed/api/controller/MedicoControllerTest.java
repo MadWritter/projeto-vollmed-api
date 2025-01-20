@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -115,5 +116,13 @@ public class MedicoControllerTest {
             .content(objectMapper.writeValueAsString(dadosAtualizacaoMedico)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.nome").value(dadosAtualizacaoMedico.nome()));
+    }
+
+    @Test
+    public void deveExcluirUmMedico() throws Exception {
+        when(medicoService.excluirMedico(anyLong())).thenReturn(true);
+
+        mockMvc.perform(delete("/medico/1"))
+            .andExpect(status().isNoContent());
     }
 }

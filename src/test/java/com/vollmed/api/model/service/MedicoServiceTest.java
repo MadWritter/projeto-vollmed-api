@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -125,10 +126,47 @@ public class MedicoServiceTest {
     }
 
     @Test
-    public void deveLancarExcecao_casoIdNaoTenhaCorrespondente() {
+    public void deveLancarExcecaoNaAtualizacao_casoIdNaoTenhaCorrespondente() {
         when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> medicoService.atualizarDados(1L, dadosDeAtualizacao));
         assertEquals("O ID informado não tem um correspondente", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecaoNaAtualizacao_casoAoSincronizarBancoFora() {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+        doThrow(PersistenceException.class).when(medicoRepository).flush();
+
+        PersistenceException ex = assertThrows(PersistenceException.class, () -> medicoService.atualizarDados(1L, dadosDeAtualizacao));
+        assertEquals("Erro ao processar a atualização, o banco está fora", ex.getMessage());
+    }
+
+    @Test
+    public void deveExcluirUmMedico() {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+
+        Boolean excluiu = medicoService.excluirMedico(1L);
+        assertTrue(excluiu);
+    }
+
+    @Test
+    public void deveLancarExcecaoNaExclusao_casoIdNaoTenhaCorrespondente() {
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> medicoService.excluirMedico(1L));
+        assertEquals("O ID informado não tem um correspondente", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecaoNaExclusao_casoAoSincronizarBancoFora() {
+        var medicoCadastrado = new Medico(dadosCadastroMedico);
+        when(medicoRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(medicoCadastrado));
+        doThrow(PersistenceException.class).when(medicoRepository).flush();
+
+        Boolean excluiu = medicoService.excluirMedico(1L);
+        assertFalse(excluiu);
     }
 }

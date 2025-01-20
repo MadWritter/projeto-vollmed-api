@@ -41,6 +41,7 @@ public class MedicoService {
     * @param dadosDeCadastro que vieram na requisição
     * @return um DTO com os dados do médico cadastrado
     */
+    @Transactional(rollbackFor = {PersistenceException.class, DataIntegrityViolationException.class})
     public DadosMedicoCadastrado cadastrarMedico(DadosCadastroMedico dadosDeCadastro) {
         var medicoParaCadastrar = new Medico(dadosDeCadastro);
         try {
@@ -102,9 +103,10 @@ public class MedicoService {
     * @throws EntityNotFoundException caso não tenha uma entidade cadastrada
     * com o id informado
     */
+    @Transactional(rollbackFor = {DataIntegrityViolationException.class, DataIntegrityViolationException.class})
     public DadosMedicoCadastrado atualizarDados(Long id, DadosAtualizacaoMedico dadosDeAtualizacao) {
         Optional<Medico> medicoCadastrado = medicoRepository.findByIdAndAtivoTrue(id);
-        if(!medicoCadastrado.isPresent()) {
+        if(medicoCadastrado.isEmpty()) {
             throw new EntityNotFoundException("O ID informado não tem um correspondente");
         }
         try {
@@ -115,7 +117,30 @@ public class MedicoService {
                 throw new IllegalArgumentException("Telefone já cadastrado");
             }
             throw e;
+        } catch(PersistenceException e) {
+            throw new PersistenceException("Erro ao processar a atualização, o banco está fora");
         }
         return new DadosMedicoCadastrado(medicoCadastrado.get());
+    }
+
+    /**
+    * Faz a exclusão lógica, desativando o médico do sistemae
+    * @param id que vem na requisição
+    * @return true caso consiga excluir e false caso haja problema
+    * ao sincronizar a atualzação com o banco
+    */
+    @Transactional(rollbackFor = PersistenceException.class)
+    public Boolean excluirMedico(Long id) {
+        Optional<Medico> medicoCadastrado = medicoRepository.findByIdAndAtivoTrue(id);
+        if(medicoCadastrado.isEmpty()) {
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
+        }
+        try {
+            medicoCadastrado.get().setAtivo(false);
+            medicoRepository.flush();
+            return true;
+        } catch(PersistenceException e) {
+            return false;
+        }
     }
 }
