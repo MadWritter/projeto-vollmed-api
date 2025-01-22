@@ -1,18 +1,24 @@
 package com.vollmed.api.controller;
 
 import static builder.DadosCadastroPacienteBuilder.dadosDeCadastro;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,5 +79,24 @@ public class PacienteControllerTest {
 
         mockMvc.perform(get("/paciente/2"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deveRetornarUmaPaginaComOsPacientesCadastrados() throws Exception {
+        var paciente1 = new Paciente(dadosCadastroPaciente);
+        var paciente2 = new Paciente(dadosCadastroPaciente);
+        var paciente3 = new Paciente(dadosCadastroPaciente);
+        var paciente4 = new Paciente(dadosCadastroPaciente);
+
+        var listPacientes = List.of(paciente1, paciente2, paciente3, paciente4);
+
+        when(pacienteService.findAll(anyString(), anyInt()))
+            .thenReturn(new PageImpl<>(listPacientes.stream().map(DadosPacienteCadastrado::new).toList()));
+
+        mockMvc.perform(get("/paciente")
+            .param("sort", "nome")
+            .param("page", "0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content", hasSize(4)));
     }
 }
