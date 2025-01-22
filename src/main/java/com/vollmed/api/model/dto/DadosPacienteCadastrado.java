@@ -1,5 +1,6 @@
 package com.vollmed.api.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vollmed.api.model.entity.Paciente;
 
 /**
@@ -11,6 +12,7 @@ public record DadosPacienteCadastrado(
     Long id,
     String nome,
     String email,
+    @JsonProperty(value = "CPF")
     String cpf
 ) {
     public DadosPacienteCadastrado(Paciente paciente) {

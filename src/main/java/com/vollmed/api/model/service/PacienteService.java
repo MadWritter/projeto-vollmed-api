@@ -46,4 +46,12 @@ public class PacienteService {
             throw e;
         }
     }
+
+    public DadosPacienteCadastrado findById(Long id) {
+        try {
+            return pacienteRepository.findById(id).map(DadosPacienteCadastrado::new).orElse(null);
+        } catch(PersistenceException e) {
+            throw new PersistenceException("Erro ao consultar o paciente, o banco está inoperante");
+        }
+    }
 }

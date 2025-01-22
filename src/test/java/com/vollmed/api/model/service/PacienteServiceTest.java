@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -61,5 +64,22 @@ public class PacienteServiceTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> pacienteService.cadastrarPaciente(dadosCadastroPaciente));
         assertTrue(ex.getMessage().contains("Email já cadastrado"));
+    }
+
+    @Test
+    public void deveRetornarUmPacienteAPartirDoId() {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+
+        DadosPacienteCadastrado dadosCadastrados = pacienteService.findById(1L);
+        assertNotNull(dadosCadastrados);
+    }
+
+    @Test
+    public void deveLancarUmaExcecao_casoOBancoEstejaForaNaConsulta() {
+        when(pacienteRepository.findById(anyLong())).thenThrow(PersistenceException.class);
+
+        PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.findById(1L));
+        assertEquals("Erro ao consultar o paciente, o banco está inoperante", ex.getMessage());
     }
 }

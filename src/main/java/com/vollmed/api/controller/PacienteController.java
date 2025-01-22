@@ -3,6 +3,8 @@ package com.vollmed.api.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +15,7 @@ import com.vollmed.api.model.dto.DadosCadastroPaciente;
 import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.service.PacienteService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 /**
@@ -44,5 +47,16 @@ public class PacienteController {
         URI uri = uriBuilder.path("/{id}").buildAndExpand(dadosCadastrados.id()).toUri();
 
         return ResponseEntity.created(uri).body(dadosCadastrados);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<DadosPacienteCadastrado> findById(@PathVariable Long id) {
+        DadosPacienteCadastrado dadosCadastrados = pacienteService.findById(id);
+
+        if(dadosCadastrados == null) {
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
+        }
+
+        return ResponseEntity.ok(dadosCadastrados);
     }
 }

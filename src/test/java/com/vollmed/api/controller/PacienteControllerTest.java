@@ -2,7 +2,9 @@ package com.vollmed.api.controller;
 
 import static builder.DadosCadastroPacienteBuilder.dadosDeCadastro;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,5 +53,25 @@ public class PacienteControllerTest {
             .content(objectMapper.writeValueAsBytes(dadosCadastroPaciente)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.nome").value(dadosCadastroPaciente.nome()));
+    }
+
+    @Test
+    public void deveRetornarUmPacienteCadastrado() throws Exception {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        var dadosPacienteCadastrado = new DadosPacienteCadastrado(pacienteCadastrado);
+
+        when(pacienteService.findById(anyLong())).thenReturn(dadosPacienteCadastrado);
+
+        mockMvc.perform(get("/paciente/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.CPF").value(dadosCadastroPaciente.cpf()));
+    }
+
+    @Test
+    public void deveRetornar404_casoPacienteNaoExista() throws Exception {
+        when(pacienteService.findById(anyLong())).thenReturn(null);
+
+        mockMvc.perform(get("/paciente/2"))
+            .andExpect(status().isNotFound());
     }
 }
