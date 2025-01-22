@@ -1,5 +1,8 @@
 package com.vollmed.api.model.entity;
 
+import com.vollmed.api.model.dto.DadosCadastroEndereco;
+import com.vollmed.api.model.dto.DadosCadastroPaciente;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -48,12 +51,16 @@ public class Paciente {
     * @param cpf os 11 dígitos
     * @param endereco os dados para cadastrar o endereço
     */
-    public Paciente(String nome, String email, String telefone, String cpf, Endereco endereco) {
+    public Paciente(String nome, String email, String telefone, String cpf, DadosCadastroEndereco endereco) {
         setNome(nome);
         setEmail(email);
         setTelefone(telefone);
         setCpf(cpf);
         setEndereco(endereco);
+    }
+
+    public Paciente(DadosCadastroPaciente dados) {
+        this(dados.nome(), dados.email(), dados.telefone(), dados.cpf(), dados.endereco());
     }
 
 	public void setId(Long id) {
@@ -76,7 +83,8 @@ public class Paciente {
 		this.cpf = cpf;
 	}
 
-	public void setEndereco(Endereco endereco) {
-		this.endereco = endereco;
+	public void setEndereco(DadosCadastroEndereco endereco) {
+		this.endereco = new Endereco(endereco);
 	}
+
 }
