@@ -1,5 +1,7 @@
 package com.vollmed.api.model.service;
 
+import java.util.Optional;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,11 +11,13 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.vollmed.api.controller.PacienteController;
+import com.vollmed.api.model.dto.DadosAtualizacaoPaciente;
 import com.vollmed.api.model.dto.DadosCadastroPaciente;
 import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.repository.PacienteRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 
 /**
@@ -83,5 +87,27 @@ public class PacienteService {
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar a lista de pacientes, o banco está inoperante");
         }
+    }
+
+    /**
+    * Atualiza um paciente no sistema
+    * @param id que veio na requisição
+    * @param dadosDeAtualizacao que vieram no corpo da requisição
+    * @return um DTO com os dados atualizados
+    */
+    public DadosPacienteCadastrado atualizarPaciente(Long id, DadosAtualizacaoPaciente dadosDeAtualizacao) {
+        Optional<Paciente> pacienteConsultado = pacienteRepository.findById(id);
+
+        if(pacienteConsultado.isEmpty()) {
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
+        }
+        try {
+            pacienteConsultado.get().atualizarDados(dadosDeAtualizacao);
+            pacienteRepository.flush();
+        } catch(PersistenceException e) {
+            throw new PersistenceException("Erro ao processar a atualização, o banco está inoperante");
+        }
+
+        return new DadosPacienteCadastrado(pacienteConsultado.get());
     }
 }

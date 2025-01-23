@@ -1,5 +1,6 @@
 package com.vollmed.api.model.entity;
 
+import com.vollmed.api.model.dto.DadosAtualizacaoPaciente;
 import com.vollmed.api.model.dto.DadosCadastroEndereco;
 import com.vollmed.api.model.dto.DadosCadastroPaciente;
 
@@ -63,28 +64,44 @@ public class Paciente {
         this(dados.nome(), dados.email(), dados.telefone(), dados.cpf(), dados.endereco());
     }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public void setNome(String nome) {
-		this.nome = nome;
+	   if(nome != null && !nome.isBlank()) {
+		 this.nome = nome;
+	   }
 	}
 
 	public void setEmail(String email) {
-		this.email = email;
+	   if(email != null && !email.isBlank()) {
+		 this.email = email;
+	   }
 	}
 
 	public void setTelefone(String telefone) {
-		this.telefone = telefone;
+	   if(telefone != null && !telefone.isBlank()) {
+		  this.telefone = telefone;
+	   }
 	}
 
 	public void setCpf(String cpf) {
-		this.cpf = cpf;
+	   if(cpf != null && !cpf.isBlank()) {
+		 this.cpf = cpf;
+	   }
 	}
 
 	public void setEndereco(DadosCadastroEndereco endereco) {
 		this.endereco = new Endereco(endereco);
 	}
+
+    public void atualizarDados(DadosAtualizacaoPaciente dados) {
+        setNome(dados.nome());
+        setTelefone(dados.telefone());
+        this.endereco.setLogradouro(dados.endereco().logradouro());
+        this.endereco.setNumero(dados.endereco().numero());
+        this.endereco.setComplemento(dados.endereco().complemento());
+        this.endereco.setBairro(dados.endereco().bairro());
+        this.endereco.setCidade(dados.endereco().cidade());
+        this.endereco.setUf(dados.endereco().uf());
+        this.endereco.setCep(dados.endereco().cep());
+    }
 
 }

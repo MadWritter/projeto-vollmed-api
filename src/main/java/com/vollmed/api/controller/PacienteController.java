@@ -7,12 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.vollmed.api.model.dto.DadosAtualizacaoPaciente;
 import com.vollmed.api.model.dto.DadosCadastroPaciente;
 import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.service.PacienteService;
@@ -79,5 +81,18 @@ public class PacienteController {
         @RequestParam(defaultValue = "nome") String sort, @RequestParam(defaultValue = "0") int page) {
             Page<DadosPacienteCadastrado> pagina = pacienteService.findAll(sort, page);
             return ResponseEntity.ok(pagina);
+    }
+
+    /**
+    * Atualiza um paciente a partir do ID
+    * @param id que vem na URI
+    * @param dados os dados de atualização que vem no corpo da requisição
+    * @return um DTO com os dados atualizados
+    */
+    @PutMapping("/{id}")
+    public ResponseEntity<DadosPacienteCadastrado> atualizarPaciente(
+        @PathVariable Long id, @RequestBody @Valid DadosAtualizacaoPaciente dados) {
+            DadosPacienteCadastrado dadosAtualizados = pacienteService.atualizarPaciente(id, dados);
+            return ResponseEntity.ok(dadosAtualizados);
     }
 }

@@ -1,5 +1,6 @@
 package com.vollmed.api.model.service;
 
+import static builder.DadosAtualizacaoPacienteBuilder.dadosDeAtualizacao;
 import static builder.DadosCadastroPacienteBuilder.dadosDeCadastro;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -24,11 +26,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.vollmed.api.model.dto.DadosAtualizacaoPaciente;
 import com.vollmed.api.model.dto.DadosCadastroPaciente;
 import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.repository.PacienteRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,10 +43,12 @@ public class PacienteServiceTest {
     @Mock
     private PacienteRepository pacienteRepository;
     private static DadosCadastroPaciente dadosCadastroPaciente;
+    private static DadosAtualizacaoPaciente dadosAtualizacaoPaciente;
 
     @BeforeAll
     public static void setup() {
         dadosCadastroPaciente = dadosDeCadastro().validos().agora();
+        dadosAtualizacaoPaciente = dadosDeAtualizacao().validos().agora();
     }
 
     @Test
@@ -111,5 +117,33 @@ public class PacienteServiceTest {
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.findAll("nome", 0));
         assertEquals("Erro ao consultar a lista de pacientes, o banco está inoperante", ex.getMessage());
+    }
+
+    @Test
+    public void deveAtualizarUmPacienteCadastrado() {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+
+        DadosPacienteCadastrado dadosAtualizados = pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente);
+        assertNotNull(dadosAtualizados);
+        assertEquals(dadosAtualizacaoPaciente.nome(), dadosAtualizados.nome());
+    }
+
+    @Test
+    public void deveLancarExcecaoNaAtualizacao_casoNaoTenhaCorrespondente() {
+        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente));
+        assertEquals("O ID informado não tem um correspondente", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarUmaExcecaoNaAtualizacao_casoAoSincronizarBancoFora() {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        doThrow(PersistenceException.class).when(pacienteRepository).flush();
+
+        PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente));
+        assertEquals("Erro ao processar a atualização, o banco está inoperante", ex.getMessage());
     }
 }
