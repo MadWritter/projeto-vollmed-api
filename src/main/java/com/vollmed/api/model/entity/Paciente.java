@@ -44,6 +44,9 @@ public class Paciente {
     @Embedded
     private Endereco endereco;
 
+    @Column(nullable = false)
+    private Boolean ativo;
+
     /**
     * Construtor para essa entidade
     * @param nome até 100 dígitos
@@ -58,6 +61,7 @@ public class Paciente {
         setTelefone(telefone);
         setCpf(cpf);
         setEndereco(endereco);
+        setAtivo(true);
     }
 
     public Paciente(DadosCadastroPaciente dados) {
@@ -90,6 +94,12 @@ public class Paciente {
 
 	public void setEndereco(DadosCadastroEndereco endereco) {
 		this.endereco = new Endereco(endereco);
+	}
+
+	public void setAtivo(Boolean status) {
+	   if(status != null) {
+		 this.ativo = status;
+	   }
 	}
 
     public void atualizarDados(DadosAtualizacaoPaciente dados) {

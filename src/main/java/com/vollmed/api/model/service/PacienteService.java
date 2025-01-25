@@ -68,7 +68,7 @@ public class PacienteService {
     */
     public DadosPacienteCadastrado findById(Long id) {
         try {
-            return pacienteRepository.findById(id).map(DadosPacienteCadastrado::new).orElse(null);
+            return pacienteRepository.findByIdAndAtivoTrue(id).map(DadosPacienteCadastrado::new).orElse(null);
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar o paciente, o banco está inoperante");
         }
@@ -83,7 +83,7 @@ public class PacienteService {
     public Page<DadosPacienteCadastrado> findAll(String sort, int page) {
         Pageable paginacao = PageRequest.of(page, 10, Sort.by(Direction.ASC, sort));
         try {
-            return pacienteRepository.findAll(paginacao).map(DadosPacienteCadastrado::new);
+            return pacienteRepository.findAllByAtivoTrue(paginacao).map(DadosPacienteCadastrado::new);
         } catch(PersistenceException e) {
             throw new PersistenceException("Erro ao consultar a lista de pacientes, o banco está inoperante");
         }
@@ -96,7 +96,7 @@ public class PacienteService {
     * @return um DTO com os dados atualizados
     */
     public DadosPacienteCadastrado atualizarPaciente(Long id, DadosAtualizacaoPaciente dadosDeAtualizacao) {
-        Optional<Paciente> pacienteConsultado = pacienteRepository.findById(id);
+        Optional<Paciente> pacienteConsultado = pacienteRepository.findByIdAndAtivoTrue(id);
 
         if(pacienteConsultado.isEmpty()) {
             throw new EntityNotFoundException("O ID informado não tem um correspondente");
@@ -109,5 +109,27 @@ public class PacienteService {
         }
 
         return new DadosPacienteCadastrado(pacienteConsultado.get());
+    }
+
+    /**
+    * Faz a exclusão de um paciente do sistema
+    * @param id que veio na requisição
+    * @return um booleano informando sobre o sucesso da transação
+    */
+    public Boolean excluirPaciente(Long id) {
+        Optional<Paciente> pacienteConsultado = pacienteRepository.findByIdAndAtivoTrue(id);
+
+        if(pacienteConsultado.isEmpty()) {
+            throw new EntityNotFoundException("O ID informado não tem um correspondente");
+        }
+
+        try {
+            pacienteConsultado.get().setAtivo(false);
+            pacienteRepository.flush();
+            return true;
+        } catch(PersistenceException e) {
+            return false;
+        }
+
     }
 }

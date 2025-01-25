@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -118,5 +119,13 @@ public class PacienteControllerTest {
             .content(objectMapper.writeValueAsString(dadosAtualizacaoPaciente)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.nome").value(dadosAtualizacaoPaciente.nome()));
+    }
+
+    @Test
+    public void deveExcluirUmPacienteCadastrado() throws Exception {
+        when(pacienteService.excluirPaciente(anyLong())).thenReturn(true);
+
+        mockMvc.perform(delete("/paciente/1"))
+            .andExpect(status().isNoContent());
     }
 }

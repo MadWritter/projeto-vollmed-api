@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.service.PacienteService;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
 import jakarta.validation.Valid;
 
 /**
@@ -94,5 +96,21 @@ public class PacienteController {
         @PathVariable Long id, @RequestBody @Valid DadosAtualizacaoPaciente dados) {
             DadosPacienteCadastrado dadosAtualizados = pacienteService.atualizarPaciente(id, dados);
             return ResponseEntity.ok(dadosAtualizados);
+    }
+
+    /**
+    * Faz a exclusão de um paciente a partir do ID
+    * @param id que vem na URI
+    * @return um 204 no content caso efetua a exclusão com sucesso
+    */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> excluirPaciente(@PathVariable Long id) {
+        Boolean excluiu = pacienteService.excluirPaciente(id);
+
+        if(!excluiu) {
+            throw new PersistenceException("Erro ao processar a exclusão do paciente");
+        }
+
+        return ResponseEntity.noContent().build();
     }
 }

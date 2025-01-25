@@ -80,7 +80,7 @@ public class PacienteServiceTest {
     @Test
     public void deveRetornarUmPacienteAPartirDoId() {
         var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
-        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
 
         DadosPacienteCadastrado dadosCadastrados = pacienteService.findById(1L);
         assertNotNull(dadosCadastrados);
@@ -88,7 +88,7 @@ public class PacienteServiceTest {
 
     @Test
     public void deveLancarUmaExcecao_casoOBancoEstejaForaNaConsulta() {
-        when(pacienteRepository.findById(anyLong())).thenThrow(PersistenceException.class);
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenThrow(PersistenceException.class);
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.findById(1L));
         assertEquals("Erro ao consultar o paciente, o banco está inoperante", ex.getMessage());
@@ -102,7 +102,7 @@ public class PacienteServiceTest {
 
         var pageImpl = new PageImpl<>(List.of(paciente1, paciente2, paciente3));
 
-        when(pacienteRepository.findAll(any(Pageable.class))).thenReturn(pageImpl);
+        when(pacienteRepository.findAllByAtivoTrue(any(Pageable.class))).thenReturn(pageImpl);
 
         Page<DadosPacienteCadastrado> paginacao = pacienteService.findAll("nome", 0);
 
@@ -113,7 +113,7 @@ public class PacienteServiceTest {
 
     @Test
     public void deveLancarUmaExcecaoNaConsulta_casoOBancoEstejaInoperante() {
-        when(pacienteRepository.findAll(any(Pageable.class))).thenThrow(PersistenceException.class);
+        when(pacienteRepository.findAllByAtivoTrue(any(Pageable.class))).thenThrow(PersistenceException.class);
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.findAll("nome", 0));
         assertEquals("Erro ao consultar a lista de pacientes, o banco está inoperante", ex.getMessage());
@@ -122,7 +122,7 @@ public class PacienteServiceTest {
     @Test
     public void deveAtualizarUmPacienteCadastrado() {
         var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
-        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
 
         DadosPacienteCadastrado dadosAtualizados = pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente);
         assertNotNull(dadosAtualizados);
@@ -131,7 +131,7 @@ public class PacienteServiceTest {
 
     @Test
     public void deveLancarExcecaoNaAtualizacao_casoNaoTenhaCorrespondente() {
-        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente));
         assertEquals("O ID informado não tem um correspondente", ex.getMessage());
@@ -140,10 +140,36 @@ public class PacienteServiceTest {
     @Test
     public void deveLancarUmaExcecaoNaAtualizacao_casoAoSincronizarBancoFora() {
         var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
-        when(pacienteRepository.findById(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
         doThrow(PersistenceException.class).when(pacienteRepository).flush();
 
         PersistenceException ex = assertThrows(PersistenceException.class, () -> pacienteService.atualizarPaciente(1L, dadosAtualizacaoPaciente));
         assertEquals("Erro ao processar a atualização, o banco está inoperante", ex.getMessage());
+    }
+
+    @Test
+    public void deveExcluirUmPacienteCadastrado() {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+
+        Boolean excluiu = pacienteService.excluirPaciente(1L);
+        assertTrue(excluiu);
+    }
+
+    @Test
+    public void deveLancarExcecaoNaExclusao_casoNaoTenhaCorrespondente() {
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> pacienteService.excluirPaciente(1L));
+        assertEquals("O ID informado não tem um correspondente", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecaoNaExclusao_casoAoSincronizarBancoFora() {
+        var pacienteCadastrado = new Paciente(dadosCadastroPaciente);
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        doThrow(PersistenceException.class).when(pacienteRepository).flush();
+
+        assertFalse(pacienteService.excluirPaciente(1L));
     }
 }
