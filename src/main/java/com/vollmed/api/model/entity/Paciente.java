@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Entidade que representa um Paciente
+ * 
  * @since branch pacientes
  * @author Jean Maciel
  */
@@ -48,13 +49,14 @@ public class Paciente {
     private Boolean ativo;
 
     /**
-    * Construtor para essa entidade
-    * @param nome até 100 dígitos
-    * @param email até 100 dígitos
-    * @param telefone os 11 dígitos
-    * @param cpf os 11 dígitos
-    * @param endereco os dados para cadastrar o endereço
-    */
+     * Construtor para essa entidade
+     * 
+     * @param nome     até 100 dígitos
+     * @param email    até 100 dígitos
+     * @param telefone os 11 dígitos
+     * @param cpf      os 11 dígitos
+     * @param endereco os dados para cadastrar o endereço
+     */
     public Paciente(String nome, String email, String telefone, String cpf, DadosCadastroEndereco endereco) {
         setNome(nome);
         setEmail(email);
@@ -68,39 +70,39 @@ public class Paciente {
         this(dados.nome(), dados.email(), dados.telefone(), dados.cpf(), dados.endereco());
     }
 
-	public void setNome(String nome) {
-	   if(nome != null && !nome.isBlank()) {
-		 this.nome = nome;
-	   }
-	}
+    public void setNome(String nome) {
+        if (nome != null && !nome.isBlank()) {
+            this.nome = nome;
+        }
+    }
 
-	public void setEmail(String email) {
-	   if(email != null && !email.isBlank()) {
-		 this.email = email;
-	   }
-	}
+    public void setEmail(String email) {
+        if (email != null && !email.isBlank()) {
+            this.email = email;
+        }
+    }
 
-	public void setTelefone(String telefone) {
-	   if(telefone != null && !telefone.isBlank()) {
-		  this.telefone = telefone;
-	   }
-	}
+    public void setTelefone(String telefone) {
+        if (telefone != null && !telefone.isBlank()) {
+            this.telefone = telefone;
+        }
+    }
 
-	public void setCpf(String cpf) {
-	   if(cpf != null && !cpf.isBlank()) {
-		 this.cpf = cpf;
-	   }
-	}
+    public void setCpf(String cpf) {
+        if (cpf != null && !cpf.isBlank()) {
+            this.cpf = cpf;
+        }
+    }
 
-	public void setEndereco(DadosCadastroEndereco endereco) {
-		this.endereco = new Endereco(endereco);
-	}
+    public void setEndereco(DadosCadastroEndereco endereco) {
+        this.endereco = new Endereco(endereco);
+    }
 
-	public void setAtivo(Boolean status) {
-	   if(status != null) {
-		 this.ativo = status;
-	   }
-	}
+    public void setAtivo(Boolean status) {
+        if (status != null) {
+            this.ativo = status;
+        }
+    }
 
     public void atualizarDados(DadosAtualizacaoPaciente dados) {
         setNome(dados.nome());
