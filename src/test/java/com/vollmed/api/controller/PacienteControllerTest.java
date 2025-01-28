@@ -33,7 +33,7 @@ import com.vollmed.api.model.dto.DadosPacienteCadastrado;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.service.PacienteService;
 
-@WebMvcTest
+@WebMvcTest(PacienteController.class)
 public class PacienteControllerTest {
 
     @MockitoBean
