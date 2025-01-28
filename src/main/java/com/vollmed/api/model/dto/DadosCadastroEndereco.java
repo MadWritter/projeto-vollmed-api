@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * DTO que representa os dados de endereço no cadastro
+ * 
  * @since branch medicos
  * @author Jean Maciel
  * @see DadosCadastroMedico

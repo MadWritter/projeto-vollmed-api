@@ -1,6 +1,8 @@
 package com.vollmed.api.model.entity;
+
 /**
  * As unidades federativas do Brasil
+ * 
  * @since branch medicos
  * @author Jean Maciel
  * @see Endereco
