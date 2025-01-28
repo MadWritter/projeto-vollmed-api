@@ -1,5 +1,7 @@
 package com.vollmed.api.model.entity;
 
+import java.util.List;
+
 import com.vollmed.api.model.dto.DadosAtualizacaoMedico;
 import com.vollmed.api.model.dto.DadosCadastroEndereco;
 import com.vollmed.api.model.dto.DadosCadastroMedico;
@@ -13,6 +15,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,6 +58,9 @@ public class Medico {
 
 	@Embedded
 	private Endereco endereco;
+
+	@OneToMany(mappedBy = "medico")
+	private List<Consulta> consultas;
 
 	/**
 	 * Construtor para essa entidade
