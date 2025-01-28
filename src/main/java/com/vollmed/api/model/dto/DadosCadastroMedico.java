@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * DTO para receber os dados de cadastro de um médico
+ * 
  * @since branch medicos
  * @author Jean Maciel
  * @see MedicoController
