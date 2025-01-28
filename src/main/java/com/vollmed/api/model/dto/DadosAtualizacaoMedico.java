@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * DTO que representa os dados de atualização de um médico
+ * 
  * @since branch medicos
  * @author Jean Maciel
  */

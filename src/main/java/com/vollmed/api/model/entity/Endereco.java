@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * Entidade que representa os dados de endereço
  * 
+ * 
  * @since branch medicos
  * @author Jean Maciel
  */

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository para as transações da entidade Médico
+ * 
  * @since branch medicos
  * @author Jean Maciel
  * @see Medico
@@ -19,16 +20,18 @@ import org.springframework.stereotype.Repository;
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
 
     /**
-    * Busca por um Médico que esteja ativo no sistema
-    * @param id para consulta
-    * @return um Optional com o possível médico
-    */
+     * Busca por um Médico que esteja ativo no sistema
+     * 
+     * @param id para consulta
+     * @return um Optional com o possível médico
+     */
     Optional<Medico> findByIdAndAtivoTrue(Long id);
 
     /**
-    * Busca todos os médicos ativos no sistema
-    * @param pageable paginação da consulta
-    * @return uma página com os dados consultados.
-    */
+     * Busca todos os médicos ativos no sistema
+     * 
+     * @param pageable paginação da consulta
+     * @return uma página com os dados consultados.
+     */
     Page<Medico> findAllByAtivoTrue(Pageable pageable);
 }
