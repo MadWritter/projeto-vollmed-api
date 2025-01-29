@@ -13,7 +13,7 @@ public class DadosCadastroConsultaBuilder {
 
     private DadosCadastroConsultaBuilder() {}
 
-    public static DadosCadastroConsultaBuilder dadosDeCadastro() {
+    public static DadosCadastroConsultaBuilder dadosParaCadastrarConsulta() {
         return new DadosCadastroConsultaBuilder();
     }
 
