@@ -37,6 +37,7 @@ import com.vollmed.api.model.repository.PacienteRepository;
 
 import builder.DadosCadastroMedicoBuilder;
 import builder.DadosCadastroPacienteBuilder;
+import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 public class ConsultaServiceTest {
@@ -106,5 +107,28 @@ public class ConsultaServiceTest {
 
         assertEquals("As consultas devem ser agendadas entre 7h e 19h", exAntesDeSete.getMessage());
         assertEquals("As consultas devem ser agendadas entre 7h e 19h", exDepoisDeDezenove.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecao_casoPacienteInativo() {
+        LocalDateTime dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 32));
+        var dadosConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> consultaService.cadastrarConsulta(dadosConsulta));
+        assertEquals("Paciente informado não foi encontrado", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecao_casoMedicoInativo() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        LocalDateTime dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 32));
+        var dadosConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(medicoRepository.findAllByEspecialidadeAndAtivoTrue(any(Especialidade.class))).thenReturn(List.of());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> consultaService.cadastrarConsulta(dadosConsulta));
+        assertEquals("Nenhum médico com a especialidade informada disponível", ex.getMessage());
     }
 }

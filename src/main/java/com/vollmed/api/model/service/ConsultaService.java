@@ -17,6 +17,8 @@ import com.vollmed.api.model.repository.ConsultaRepository;
 import com.vollmed.api.model.repository.MedicoRepository;
 import com.vollmed.api.model.repository.PacienteRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 /**
  * Serviço para as consultas médicas
  *
@@ -50,7 +52,16 @@ public class ConsultaService {
     public DadosConsultaCadastrada cadastrarConsulta(DadosCadastroConsulta dadosDeCadastro) {
         validarHoraDaConsulta(dadosDeCadastro.dataDaConsulta());
         Optional<Paciente> pacienteConsultado = pacienteRepository.findByIdAndAtivoTrue(dadosDeCadastro.pacienteId());
+
+        if(pacienteConsultado.isEmpty()) {
+            throw new EntityNotFoundException("Paciente informado não foi encontrado");
+        }
+
         List<Medico> medicosPorEspecialidade = medicoRepository.findAllByEspecialidadeAndAtivoTrue(dadosDeCadastro.especialidade());
+
+        if(medicosPorEspecialidade.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum médico com a especialidade informada disponível");
+        }
 
         Consulta consultaParaCadastrar = new Consulta(pacienteConsultado.get(), medicosPorEspecialidade.get(0), dadosDeCadastro.dataDaConsulta());
 
