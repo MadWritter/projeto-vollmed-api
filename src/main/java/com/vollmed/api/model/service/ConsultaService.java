@@ -57,6 +57,12 @@ public class ConsultaService {
             throw new EntityNotFoundException("Paciente informado não foi encontrado");
         }
 
+        Optional<Consulta> consultaExistenteNaDataInformada =
+                    consultaRepository.findByDataAndPacienteAndAgendada(dadosDeCadastro.dataDaConsulta(), pacienteConsultado.get());
+        if(consultaExistenteNaDataInformada.isPresent()) {
+            throw new IllegalArgumentException("O paciente informado já tem uma consulta cadastrada nesta data");
+        }
+
         List<Medico> medicosPorEspecialidade = medicoRepository.findAllByEspecialidadeAndAtivoTrue(dadosDeCadastro.especialidade());
 
         if(medicosPorEspecialidade.isEmpty()) {

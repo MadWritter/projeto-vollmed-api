@@ -131,4 +131,23 @@ public class ConsultaServiceTest {
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> consultaService.cadastrarConsulta(dadosConsulta));
         assertEquals("Nenhum médico com a especialidade informada disponível", ex.getMessage());
     }
+
+    @Test
+    public void deveLancarExcecao_casoPacienteJaTenhaConsultaNoDia() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+
+        // simulando a data da consulta existente neste mesmo dia do agendamento
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dadosDeCadastro.dataDaConsulta());
+
+        // a data da consulta informada na requisição
+        LocalDateTime dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 45));
+        var dadosConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(consultaRepository.findByDataAndPacienteAndAgendada(any(LocalDateTime.class), any(Paciente.class))).thenReturn(Optional.of(consultaCadastrada));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.cadastrarConsulta(dadosConsulta));
+        assertEquals("O paciente informado já tem uma consulta cadastrada nesta data", ex.getMessage());
+    }
 }
