@@ -69,6 +69,17 @@ public class ConsultaService {
             throw new EntityNotFoundException("Nenhum médico com a especialidade informada disponível");
         }
 
+        LocalDateTime inicioConsulta = dadosDeCadastro.dataDaConsulta();
+        LocalDateTime finalConsulta = inicioConsulta.plusHours(1);
+
+        Optional<Medico> medicoDisponivel = medicosPorEspecialidade.stream()
+            .filter(medico -> consultaRepository.countByMedicoAndDataDaConsultaBetween(medico, inicioConsulta, finalConsulta) == 0)
+            .findFirst();
+
+        if(medicoDisponivel.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum médico disponível no horário informado");
+        }
+
         Consulta consultaParaCadastrar = new Consulta(pacienteConsultado.get(), medicosPorEspecialidade.get(0), dadosDeCadastro.dataDaConsulta());
 
         Consulta consultaCadastrada = consultaRepository.save(consultaParaCadastrar);

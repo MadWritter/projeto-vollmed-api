@@ -4,8 +4,10 @@ import static builder.DadosCadastroConsultaBuilder.dadosParaCadastrarConsulta;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -152,4 +154,37 @@ public class ConsultaServiceTest {
     }
 
     // Criar o teste com a validação da hora da consulta e se o médico está disponível nesse horário
+    @Test
+    public void deveBuscarUmMedicoDisponivelNoHorarioInformado() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(11, 48));
+        var dadosCadastroConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+
+        // simulando 3 Médicos com a especialidade que o paciente pediu na requisição
+        var medico1 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico1.setNome("Medico 1");
+        var medico2 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico2.setNome("Medico 2");
+        var medico3 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico3.setNome("Medico 3");
+
+        var listaMedicos = List.of(medico1, medico2, medico3);
+
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medico3, dataDaConsulta);
+
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(consultaRepository.findByDataAndPacienteAndAgendada(any(LocalDateTime.class), any(Paciente.class))).thenReturn(Optional.empty());
+        when(medicoRepository.findAllByEspecialidadeAndAtivoTrue(any(Especialidade.class))).thenReturn(listaMedicos);
+
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(0L);
+
+        when(consultaRepository.save(any(Consulta.class))).thenReturn(consultaCadastrada);
+
+        DadosConsultaCadastrada dados = consultaService.cadastrarConsulta(dadosCadastroConsulta);
+        assertTrue(dados.nomeMedico().equals("Medico 3"));
+    }
+
+    //TODO verificar a exceção lançada quando nenhum médico está disponível
 }

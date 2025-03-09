@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.vollmed.api.model.entity.Consulta;
+import com.vollmed.api.model.entity.Medico;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.service.ConsultaService;
 
@@ -23,4 +24,6 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long>{
 
     @Query("SELECT c FROM Consulta c WHERE c.dataDaConsulta = :data AND c.paciente = :paciente AND c.status = 'AGENDADA'")
     Optional<Consulta> findByDataAndPacienteAndAgendada(LocalDateTime dataDaConsulta, Paciente paciente);
+
+	long countByMedicoAndDataDaConsultaBetween(Medico medico, LocalDateTime inicioConsulta, LocalDateTime finalConsulta);
 }
