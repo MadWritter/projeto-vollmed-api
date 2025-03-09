@@ -120,7 +120,7 @@ public class ConsultaServiceTest {
     }
 
     @Test
-    public void deveLancarExcecao_casoMedicoInativo() {
+    public void deveLancarExcecao_casoNenhumMedicoComEspecialidadeInformada() {
         var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
         LocalDateTime dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 32));
         var dadosConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
@@ -150,4 +150,6 @@ public class ConsultaServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.cadastrarConsulta(dadosConsulta));
         assertEquals("O paciente informado já tem uma consulta cadastrada nesta data", ex.getMessage());
     }
+
+    // Criar o teste com a validação da hora da consulta e se o médico está disponível nesse horário
 }
