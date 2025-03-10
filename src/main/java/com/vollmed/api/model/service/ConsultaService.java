@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.vollmed.api.controller.ConsultaController;
 import com.vollmed.api.model.component.ClockConfig;
@@ -13,11 +14,13 @@ import com.vollmed.api.model.dto.DadosConsultaCadastrada;
 import com.vollmed.api.model.entity.Consulta;
 import com.vollmed.api.model.entity.Medico;
 import com.vollmed.api.model.entity.Paciente;
+import com.vollmed.api.model.entity.Status;
 import com.vollmed.api.model.repository.ConsultaRepository;
 import com.vollmed.api.model.repository.MedicoRepository;
 import com.vollmed.api.model.repository.PacienteRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
 
 /**
  * Serviço para as consultas médicas
@@ -49,6 +52,7 @@ public class ConsultaService {
     * @param dadosDeCadastro que vieram na requisição
     * @return um DTO com os dados da consulta cadastrada.
     */
+    @Transactional
     public DadosConsultaCadastrada cadastrarConsulta(DadosCadastroConsulta dadosDeCadastro) {
         validarHoraDaConsulta(dadosDeCadastro.dataDaConsulta());
         Optional<Paciente> pacienteConsultado = pacienteRepository.findByIdAndAtivoTrue(dadosDeCadastro.pacienteId());
@@ -87,6 +91,23 @@ public class ConsultaService {
         return new DadosConsultaCadastrada(consultaCadastrada);
     }
 
+    @Transactional
+	public boolean finalizarConsulta(Long id) {
+	    Optional<Consulta> consultaAgendada = consultaRepository.findByIdAndStatusAgendada(id);
+
+		if(consultaAgendada.isEmpty()) {
+		    throw new IllegalArgumentException("Nenhuma consulta agendada com o ID informado");
+		}
+
+		try {
+		    consultaAgendada.get().setStatus(Status.CONCLUIDA);
+			consultaRepository.flush();
+			return true;
+		} catch(PersistenceException e) {
+		    return false;
+		}
+	}
+
     /**
     * Método para validar a data e hora da consulta informada
     *
@@ -101,5 +122,6 @@ public class ConsultaService {
 		  throw new IllegalArgumentException("As consultas devem ser agendadas entre 7h e 19h");
 		}
 	}
+
 
 }

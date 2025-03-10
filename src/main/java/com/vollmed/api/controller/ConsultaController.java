@@ -3,7 +3,9 @@ package com.vollmed.api.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +15,7 @@ import com.vollmed.api.model.dto.DadosCadastroConsulta;
 import com.vollmed.api.model.dto.DadosConsultaCadastrada;
 import com.vollmed.api.model.service.ConsultaService;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.validation.Valid;
 
 /**
@@ -46,5 +49,16 @@ public class ConsultaController {
             URI uri = uriBuilder.path("/{id}").buildAndExpand(dadosCadastrados.idConsulta()).toUri();
 
             return ResponseEntity.created(uri).body(dadosCadastrados);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> finalizarConsulta(@PathVariable Long id) {
+        boolean finalizou = consultaService.finalizarConsulta(id);
+
+        if(!finalizou) {
+            throw new PersistenceException("Erro ao finalizar a consulta, tente novamente em instantes");
+        }
+
+        return ResponseEntity.noContent().build();
     }
 }

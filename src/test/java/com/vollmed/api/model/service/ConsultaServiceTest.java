@@ -2,12 +2,14 @@ package com.vollmed.api.model.service;
 
 import static builder.DadosCadastroConsultaBuilder.dadosParaCadastrarConsulta;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -40,6 +42,7 @@ import com.vollmed.api.model.repository.PacienteRepository;
 import builder.DadosCadastroMedicoBuilder;
 import builder.DadosCadastroPacienteBuilder;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
 
 @ExtendWith(MockitoExtension.class)
 public class ConsultaServiceTest {
@@ -186,5 +189,68 @@ public class ConsultaServiceTest {
         assertTrue(dados.nomeMedico().equals("Medico 3"));
     }
 
-    //TODO verificar a exceção lançada quando nenhum médico está disponível
+    @Test
+    public void deveLancarExcecao_casoNenhumMedicoDisponivelNoHorarioInformado() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 26));
+        var dadosCadastroConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+
+        // simulando 3 Médicos com a especialidade que o paciente pediu na requisição
+        var medico1 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico1.setNome("Medico 1");
+        var medico2 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico2.setNome("Medico 2");
+        var medico3 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        medico3.setNome("Medico 3");
+
+        var list = List.of(medico1, medico2, medico3);
+
+        when(pacienteRepository.findByIdAndAtivoTrue(anyLong())).thenReturn(Optional.of(pacienteCadastrado));
+        when(consultaRepository.findByDataAndPacienteAndAgendada(any(LocalDateTime.class), any(Paciente.class))).thenReturn(Optional.empty());
+        when(medicoRepository.findAllByEspecialidadeAndAtivoTrue(any(Especialidade.class))).thenReturn(list);
+
+        // todos os médicos ocupados no horário informado
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> consultaService.cadastrarConsulta(dadosCadastroConsulta));
+        assertEquals("Nenhum médico disponível no horário informado", ex.getMessage());
+    }
+
+    @Test
+    public void deveFinalizarUmaConsulta() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(10, 40));
+
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
+
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.of(consultaCadastrada));
+
+        assertTrue(consultaService.finalizarConsulta(1L));
+    }
+
+    @Test
+    public void deveRetornarFalseAoFinalizarConsulta_casoHajaErroAoSincronizar() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(10, 40));
+
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
+
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.of(consultaCadastrada));
+        doThrow(PersistenceException.class).when(consultaRepository).flush();
+
+        assertFalse(consultaService.finalizarConsulta(1L));
+    }
+
+    @Test
+    public void deveLancarExcecaoAoFinalizar_casoConsultaInexistenteAgendada() {
+
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.finalizarConsulta(2L));
+        assertEquals("Nenhuma consulta agendada com o ID informado", ex.getMessage());
+    }
 }
