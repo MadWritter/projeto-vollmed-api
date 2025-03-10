@@ -55,6 +55,7 @@ public class ConsultaController {
 
     /**
     * Finaliza uma consulta cadastrada
+    *
     * @param id da consulta que deseja finalizar
     * @return um 204(No Content) indicando sucesso ao finalizar a consulta
     */
@@ -71,6 +72,7 @@ public class ConsultaController {
 
     /**
     * Faz a exclusão lógica de uma consulta cadastrada
+    *
     * @param id da consulta que deseja cancelar
     * @param dadosDeCancelamento informando o motivo e a observação do cancelamento
     * @return um 204(No Content) indicando sucesso ao cancelar a consulta

@@ -1,7 +1,6 @@
 package com.vollmed.api.controller;
 
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Controller Advice para tratar as exeções no PacienteController
- * 
+ *
  * @since branch pacientes
  * @author Jean Maciel
  * @see PacienteController
@@ -68,44 +67,5 @@ public class PacienteControllerAdvice {
         Map<String, Object> res = messageBuilder.getMessage();
 
         return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-    }
-
-    /**
-     * Classe para a construção de respostas HTTP a respeito das exceções
-     */
-    private class ExceptionMessageBuilder {
-        private LocalDate timestamp;
-        private Integer status;
-        private String message;
-        private String uri;
-
-        /**
-         * Construtor para a mensagem a ser devolvida
-         *
-         * @param timestamp horário do ocorrido
-         * @param status    o status HTTP
-         * @param message   a mensagem informando o ocorrido
-         * @param uri       o caminho de onde ocorreu a exceção
-         */
-        private ExceptionMessageBuilder(LocalDate timestamp, Integer status, String message, String uri) {
-            this.timestamp = timestamp;
-            this.status = status;
-            this.message = message;
-            this.uri = uri;
-        }
-
-        /**
-         * Devolve a mensagem organizada.
-         *
-         * @return um LinkedHashMap organizado com a mensagem a ser devolvida
-         */
-        private Map<String, Object> getMessage() {
-            Map<String, Object> message = new LinkedHashMap<>();
-            message.put("timestamp", this.timestamp);
-            message.put("status", this.status);
-            message.put("message", this.message);
-            message.put("path", this.uri);
-            return message;
-        }
     }
 }
