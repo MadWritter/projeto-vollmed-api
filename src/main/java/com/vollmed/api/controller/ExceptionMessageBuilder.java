@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * Builder para as mensagens de exceção dos Controllers
+ *
  * @since branch consultas
  * @author Jean Maciel
  */

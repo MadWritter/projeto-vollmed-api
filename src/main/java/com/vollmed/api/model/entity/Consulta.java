@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Entidade que representa uma consulta médica
- * 
+ *
  * @since branch consultas
  * @author Jean Maciel
  */
@@ -46,9 +46,16 @@ public class Consulta {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motivo_cancelamento", length = 20)
+    private MotivoCancelamento motivoCancelamento;
+
+    @Column(name = "observacao_cancelamento", length = 100)
+    private String observacaoCancelamento;
+
     /**
      * Construtor para uma nova consulta
-     * 
+     *
      * @param paciente o paciente que irá se consultar
      * @param medico o médico com a especialidade solicitada pelo paciente
      * @param dataDaConsulta a data que a consulta será efetuada
@@ -86,4 +93,15 @@ public class Consulta {
         }
     }
 
+    public void setMotivoCancelamento(MotivoCancelamento motivoCancelamento) {
+        if(motivoCancelamento != null) {
+            this.motivoCancelamento = motivoCancelamento;
+        }
+    }
+
+    public void setObservacaoCancelamento(String observacao) {
+        if(observacao != null) {
+            this.observacaoCancelamento = observacao;
+        }
+    }
 }

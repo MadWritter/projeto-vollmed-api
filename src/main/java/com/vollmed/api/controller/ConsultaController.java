@@ -3,6 +3,7 @@ package com.vollmed.api.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.vollmed.api.model.dto.DadosCadastroConsulta;
+import com.vollmed.api.model.dto.DadosCancelamentoConsulta;
 import com.vollmed.api.model.dto.DadosConsultaCadastrada;
 import com.vollmed.api.model.service.ConsultaService;
 
@@ -51,12 +53,36 @@ public class ConsultaController {
             return ResponseEntity.created(uri).body(dadosCadastrados);
     }
 
+    /**
+    * Finaliza uma consulta cadastrada
+    * @param id da consulta que deseja finalizar
+    * @return um 204(No Content) indicando sucesso ao finalizar a consulta
+    */
     @PutMapping("/{id}")
     public ResponseEntity<Object> finalizarConsulta(@PathVariable Long id) {
         boolean finalizou = consultaService.finalizarConsulta(id);
 
         if(!finalizou) {
             throw new PersistenceException("Erro ao finalizar a consulta, tente novamente em instantes");
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+    * Faz a exclusão lógica de uma consulta cadastrada
+    * @param id da consulta que deseja cancelar
+    * @param dadosDeCancelamento informando o motivo e a observação do cancelamento
+    * @return um 204(No Content) indicando sucesso ao cancelar a consulta
+    */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> cancelarConsulta(
+        @PathVariable Long id, @RequestBody @Valid DadosCancelamentoConsulta dadosDeCancelamento) {
+
+        boolean cancelou = consultaService.cancelarConsulta(id, dadosDeCancelamento);
+
+        if(!cancelou) {
+            throw new PersistenceException("Erro ao efetuar o cancelamento da consulta, tente novamente em instantes");
         }
 
         return ResponseEntity.noContent().build();

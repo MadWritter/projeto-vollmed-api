@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.vollmed.api.controller.ConsultaController;
 import com.vollmed.api.model.component.ClockConfig;
 import com.vollmed.api.model.dto.DadosCadastroConsulta;
+import com.vollmed.api.model.dto.DadosCancelamentoConsulta;
 import com.vollmed.api.model.dto.DadosConsultaCadastrada;
 import com.vollmed.api.model.entity.Consulta;
 import com.vollmed.api.model.entity.Medico;
+import com.vollmed.api.model.entity.MotivoCancelamento;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.entity.Status;
 import com.vollmed.api.model.repository.ConsultaRepository;
@@ -52,7 +54,7 @@ public class ConsultaService {
     * @param dadosDeCadastro que vieram na requisição
     * @return um DTO com os dados da consulta cadastrada.
     */
-    @Transactional
+    @Transactional(rollbackFor = PersistenceException.class)
     public DadosConsultaCadastrada cadastrarConsulta(DadosCadastroConsulta dadosDeCadastro) {
         validarHoraDaConsulta(dadosDeCadastro.dataDaConsulta());
         Optional<Paciente> pacienteConsultado = pacienteRepository.findByIdAndAtivoTrue(dadosDeCadastro.pacienteId());
@@ -77,7 +79,16 @@ public class ConsultaService {
         LocalDateTime finalConsulta = inicioConsulta.plusHours(1);
 
         Optional<Medico> medicoDisponivel = medicosPorEspecialidade.stream()
-            .filter(medico -> consultaRepository.countByMedicoAndDataDaConsultaBetween(medico, inicioConsulta, finalConsulta) == 0)
+            .filter(medico -> {
+                List<Consulta> consultasNoIntervalo = consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(
+                    medico,
+                    inicioConsulta.minusMinutes(60),
+                    finalConsulta.plusMinutes(60)
+                );
+
+                return consultasNoIntervalo.isEmpty();
+            }
+            )
             .findFirst();
 
         if(medicoDisponivel.isEmpty()) {
@@ -91,7 +102,13 @@ public class ConsultaService {
         return new DadosConsultaCadastrada(consultaCadastrada);
     }
 
-    @Transactional
+    /**
+    * Finaliza uma consulta cadastrada
+    *
+    * @param id que vem na requisição
+    * @return um booleano informando o sucesso ao processar a solicitação
+    */
+    @Transactional(rollbackFor = PersistenceException.class)
 	public boolean finalizarConsulta(Long id) {
 	    Optional<Consulta> consultaAgendada = consultaRepository.findByIdAndStatusAgendada(id);
 
@@ -108,7 +125,58 @@ public class ConsultaService {
 		}
 	}
 
-    /**
+	/**
+	* Faz o cancelamento de uma consulta cadastrada
+	*
+	* @param id que vem na requisição
+	* @param dados contendo informações sobre o motivo do cancelamento
+	* @return um booleano informando o sucesso ao processar a solicitação
+	*/
+	@Transactional(rollbackFor = PersistenceException.class)
+	public boolean cancelarConsulta(Long id, DadosCancelamentoConsulta dados) {
+	    if(dados.motivoDoCancelamento() == MotivoCancelamento.OUTROS &&
+		  (dados.observacao() == null || dados.observacao().isEmpty())) {
+			throw new IllegalArgumentException("Deve informar uma observação do cancelamento no motivo 'OUTROS'");
+	    }
+
+
+	    Optional<Consulta> consultaCadastrada = consultaRepository.findByIdAndStatusAgendada(id);
+
+		if(consultaCadastrada.isEmpty()) {
+		    throw new IllegalArgumentException("Nenhuma consulta agendada com o ID informado");
+		}
+
+		validarHoraCancelamento(consultaCadastrada.get());
+
+		try {
+    		consultaCadastrada.get().setStatus(Status.CANCELADA);
+    		consultaCadastrada.get().setMotivoCancelamento(dados.motivoDoCancelamento());
+    		consultaCadastrada.get().setObservacaoCancelamento(dados.observacao());
+            consultaRepository.flush();
+            return true;
+		} catch(PersistenceException e) {
+		    return false;
+		}
+	}
+
+	/**
+	* Método para validar o horário do cancelamento
+	* Uma consulta não pode ser cancelada com menos de 24h
+	*
+	* @param consulta com horário para validar
+	*/
+    private void validarHoraCancelamento(Consulta consulta) {
+		LocalDateTime horaCadastradaConsulta = consulta.getDataDaConsulta();
+		LocalDateTime dataEhoraAtual = clockConfig.now();
+
+		// se a consulta for em menos de 24h
+		// então não é mais possível cancelar
+		if(dataEhoraAtual.plusHours(24).isAfter(horaCadastradaConsulta)) {
+		    throw new IllegalArgumentException("Você só pode cancelar uma consulta com 24h de antecedência");
+		}
+	}
+
+	/**
     * Método para validar a data e hora da consulta informada
     *
     * @param dataEHora que vem na requisição
@@ -122,6 +190,4 @@ public class ConsultaService {
 		  throw new IllegalArgumentException("As consultas devem ser agendadas entre 7h e 19h");
 		}
 	}
-
-
 }

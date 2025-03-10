@@ -30,10 +30,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vollmed.api.model.component.ClockConfig;
 import com.vollmed.api.model.dto.DadosCadastroConsulta;
+import com.vollmed.api.model.dto.DadosCancelamentoConsulta;
 import com.vollmed.api.model.dto.DadosConsultaCadastrada;
 import com.vollmed.api.model.entity.Consulta;
 import com.vollmed.api.model.entity.Especialidade;
 import com.vollmed.api.model.entity.Medico;
+import com.vollmed.api.model.entity.MotivoCancelamento;
 import com.vollmed.api.model.entity.Paciente;
 import com.vollmed.api.model.repository.ConsultaRepository;
 import com.vollmed.api.model.repository.MedicoRepository;
@@ -160,8 +162,10 @@ public class ConsultaServiceTest {
     @Test
     public void deveBuscarUmMedicoDisponivelNoHorarioInformado() {
         var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
         var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(11, 48));
         var dadosCadastroConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+        var consultaCadatrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
 
         // simulando 3 Médicos com a especialidade que o paciente pediu na requisição
         var medico1 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
@@ -179,9 +183,9 @@ public class ConsultaServiceTest {
         when(consultaRepository.findByDataAndPacienteAndAgendada(any(LocalDateTime.class), any(Paciente.class))).thenReturn(Optional.empty());
         when(medicoRepository.findAllByEspecialidadeAndAtivoTrue(any(Especialidade.class))).thenReturn(listaMedicos);
 
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(0L);
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(consultaCadatrada));
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(consultaCadatrada));
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of()); // está disponível
 
         when(consultaRepository.save(any(Consulta.class))).thenReturn(consultaCadastrada);
 
@@ -192,8 +196,10 @@ public class ConsultaServiceTest {
     @Test
     public void deveLancarExcecao_casoNenhumMedicoDisponivelNoHorarioInformado() {
         var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
         var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(8, 26));
         var dadosCadastroConsulta = new DadosCadastroConsulta(1L, Especialidade.CARDIOLOGIA, dataDaConsulta);
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
 
         // simulando 3 Médicos com a especialidade que o paciente pediu na requisição
         var medico1 = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
@@ -210,9 +216,9 @@ public class ConsultaServiceTest {
         when(medicoRepository.findAllByEspecialidadeAndAtivoTrue(any(Especialidade.class))).thenReturn(list);
 
         // todos os médicos ocupados no horário informado
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
-        when(consultaRepository.countByMedicoAndDataDaConsultaBetween(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1L);
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico1), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(consultaCadastrada));
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico2), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(consultaCadastrada));
+        when(consultaRepository.findByMedicoAndDataDaConsultaBetweenAndAgendada(eq(medico3), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(consultaCadastrada));
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> consultaService.cadastrarConsulta(dadosCadastroConsulta));
         assertEquals("Nenhum médico disponível no horário informado", ex.getMessage());
@@ -252,5 +258,65 @@ public class ConsultaServiceTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.finalizarConsulta(2L));
         assertEquals("Nenhuma consulta agendada com o ID informado", ex.getMessage());
+    }
+
+    @Test
+    public void deveCancelarUmaConsulta() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(10, 40));
+        var dadosCancelamentoConsulta = new DadosCancelamentoConsulta(MotivoCancelamento.MEDICO_CANCELOU, null);
+
+        var consultaAgendada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.of(consultaAgendada));
+
+        assertTrue(consultaService.cancelarConsulta(1L, dadosCancelamentoConsulta));
+    }
+
+    @Test
+    public void deveLancarExcecao_casoCancelamentoOutrosESemObservacao() {
+        var dadosCancelamentoConsulta = new DadosCancelamentoConsulta(MotivoCancelamento.OUTROS, null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.cancelarConsulta(1L, dadosCancelamentoConsulta));
+        assertEquals("Deve informar uma observação do cancelamento no motivo 'OUTROS'", ex.getMessage());
+    }
+
+    @Test
+    public void deveLancarExcecao_casoNenhumaConsultaAgendadaComIdInformadoParaCancelar() {
+        var dadosCancelamentoConsulta = new DadosCancelamentoConsulta(MotivoCancelamento.MEDICO_CANCELOU, null);
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.cancelarConsulta(1L, dadosCancelamentoConsulta));
+        assertEquals("Nenhuma consulta agendada com o ID informado", ex.getMessage());
+    }
+
+    @Test
+    public void deveRetornarFalse_casoHajaErroAoSincronizarCancelamentoDaConsultaNoBanco() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(10, 40));
+        var dadosDeCancelamento = new DadosCancelamentoConsulta(MotivoCancelamento.PACIENTE_DESISTIU, null);
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
+
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.of(consultaCadastrada));
+        doThrow(PersistenceException.class).when(consultaRepository).flush();
+
+        assertFalse(consultaService.cancelarConsulta(1L, dadosDeCancelamento));
+    }
+
+    @Test
+    public void deveNegarUmCancelamentoComMenosDe24H() {
+        var pacienteCadastrado = new Paciente(DadosCadastroPacienteBuilder.dadosDeCadastro().validos().agora());
+        var medicoCadastrado = new Medico(DadosCadastroMedicoBuilder.dadosDeCadastro().validos().agora());
+        var dataDaConsulta = LocalDateTime.of(LocalDate.of(2025, 1, 29), LocalTime.of(7, 28));
+
+        var consultaCadastrada = new Consulta(pacienteCadastrado, medicoCadastrado, dataDaConsulta);
+
+        var dadosDeCancelamento = new DadosCancelamentoConsulta(MotivoCancelamento.PACIENTE_DESISTIU, null);
+
+        when(consultaRepository.findByIdAndStatusAgendada(anyLong())).thenReturn(Optional.of(consultaCadastrada));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> consultaService.cancelarConsulta(1L, dadosDeCancelamento));
+        assertEquals("Você só pode cancelar uma consulta com 24h de antecedência", ex.getMessage());
     }
 }
