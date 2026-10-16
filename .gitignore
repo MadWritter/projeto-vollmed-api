@@ -5,6 +5,7 @@ mvnw
 mvnw.cmd
 !**/src/main/**/target/
 !**/src/test/**/target/
+.tool-versions
 
 ### STS ###
 .apt_generated
